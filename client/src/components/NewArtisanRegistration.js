@@ -223,25 +223,7 @@ const NewArtisanRegistration = () => {
                 
             </div>
 
-            <div style={{ marginTop: "2rem", textAlign: "center" }}>
-            
-              <button
-                className="cta-button"
-                onClick={() => (window.location.href = "#/mint")}
-                style={{
-                  backgroundColor: "#6c5ce7",
-                  color: "white",
-                  border: "none",
-                  padding: "0.75rem 1.5rem",
-                  borderRadius: "4px",
-                  cursor: "pointer",
-                  fontWeight: "bold",
-                }}
-              >
-                Mint New Artisanal Item
-              </button>
-              <div style={{ marginTop: "0.6rem" , fontSize: "0.7rem", color: "#6c5ce7" }}>You can mint new artisanal items as NFTs</div>
-            </div>
+              
           </>
         )}
       </div>
