@@ -1,10 +1,15 @@
 // Using Pinata for IPFS storage
 
-// Pinata API credentials
-const PINATA_API_KEY = 'f5666dd6013ca2a760c9';
-const PINATA_SECRET_API_KEY = '0e9e98ae2edbdb5f968476adf605aa6f97939ef013be7e1b835eea661eca8805'; // You'll need to add your Pinata secret key here
-const PINATA_GATEWAY = 'https://turquoise-raw-penguin-737.mypinata.cloud';
-const PINATA_API_URL = 'https://api.pinata.cloud';
+// Pinata API credentials from environment variables
+const PINATA_API_KEY = process.env.REACT_APP_PINATA_API_KEY;
+const PINATA_SECRET_API_KEY = process.env.REACT_APP_PINATA_SECRET_API_KEY;
+const PINATA_GATEWAY = process.env.REACT_APP_PINATA_GATEWAY;
+const PINATA_API_URL = process.env.REACT_APP_PINATA_API_URL;
+
+// Validate that Pinata credentials are available
+if (!PINATA_API_KEY || !PINATA_SECRET_API_KEY || !PINATA_GATEWAY || !PINATA_API_URL) {
+  console.error('Pinata credentials not found in environment variables. Please check your .env file.');
+}
 
 // Function to upload file to IPFS using Pinata
 export const uploadFileToIPFS = async (file) => {

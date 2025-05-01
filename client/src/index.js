@@ -5,8 +5,13 @@ import App from './NewApp';
 import reportWebVitals from './reportWebVitals';
 import { AppProvider } from './context/AppContext';
 
-// Contract address
-const CONTRACT_ADDRESS = '0x5D2d4849A8B37F86228607446F0152176bB3Ae5D';
+// Contract address from environment variable
+const CONTRACT_ADDRESS = process.env.REACT_APP_CONTRACT_ADDRESS;
+
+// Validate that the contract address is available
+if (!CONTRACT_ADDRESS) {
+  console.error('Contract address not found in environment variables. Please check your .env file.');
+}
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(

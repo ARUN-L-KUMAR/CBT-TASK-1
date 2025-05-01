@@ -15,7 +15,8 @@ function App() {
     isArtisan,
     isLoading,
     error,
-    isWrongNetwork
+    isWrongNetwork,
+    handleAccountChange
   } = useContext(AppContext);
 
   const [activeTab, setActiveTab] = useState('home');
@@ -29,6 +30,25 @@ function App() {
       alert('Failed to switch to Sepolia network. Please try manually switching in MetaMask.');
     }
   };
+
+  const connectWallet = async () => {
+    if (window.ethereum) {
+      try {
+        // Request account access
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+
+        // Handle accounts
+        if (accounts.length > 0) {
+          handleAccountChange(accounts[0]);
+        }
+      } catch (error) {
+        console.error('Error connecting wallet:', error);
+      }
+    } else {
+      alert('MetaMask is not installed. Please install it to use this app: https://metamask.io/download.html');
+    }
+  };
+
 
   const renderContent = () => {
     if (isLoading) {
@@ -114,7 +134,7 @@ function App() {
               <p>
                 Connect your wallet to explore authentic artisanal products from Chennai's finest craftspeople.
               </p>
-              <button className="cta-button">Connect Wallet</button>
+              <button className="cta-button" onClick={connectWallet}>Connect Wallet</button>
             </div>
           </div>
         )}

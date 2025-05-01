@@ -80,8 +80,6 @@ alchemy-key.txt
 mnemonic.txt
 secrets.json
 
-# Contract ABIs are generated and can be regenerated
-client/src/contracts/
 
 # Temporary files
 tmp/
