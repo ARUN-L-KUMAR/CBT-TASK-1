@@ -223,7 +223,7 @@ const NewArtisanRegistration = () => {
                 
             </div>
 
-              
+            
           </>
         )}
       </div>
