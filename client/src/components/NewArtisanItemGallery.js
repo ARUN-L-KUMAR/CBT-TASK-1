@@ -4,6 +4,17 @@ import {
   getItemDetails,
   getTokenURI,
 } from "../utils/contractUtils";
+import {
+  Search,
+  Filter,
+  Copy,
+  CheckCircle,
+  Package,
+  Calendar,
+  Layers,
+  User,
+  Loader
+} from "lucide-react";
 
 const categories = [
   { id: "all", name: "All Categories" },
@@ -81,6 +92,7 @@ const ArtisanItemGallery = ({ isOwner }) => {
 
   const fetchItems = async () => {
     try {
+      // Set initial loading state
       setIsLoading(true);
       setError("");
       // Clear existing items to show we're loading fresh data
@@ -94,8 +106,9 @@ const ArtisanItemGallery = ({ isOwner }) => {
       const maxTokensToCheck = 10; // Adjust as needed
       let foundItems = 0;
       let consecutiveErrors = 0;
+      let newItems = []; // Collect all items before updating state
 
-      // Process tokens one by one and update UI after each one
+      // Process tokens one by one
       for (let i = 0; i < maxTokensToCheck; i++) {
         // Update progress based on how many tokens we've checked
         setLoadingProgress(Math.min(((i + 1) / maxTokensToCheck) * 90, 90)); // Max 90% until complete
@@ -152,26 +165,23 @@ const ArtisanItemGallery = ({ isOwner }) => {
             name: metadata.name || `Item #${i}`,
             description: details.description,
             materials: details.materials,
-            creationDate: details.creationDate,
+            // Use the creation date directly as in the old implementation
+            creationDate: details.creationDate ,
             artisan: details.artisan,
             image: metadata.image || "",
             isVerified: details.isVerified,
             category: category,
           };
 
-          // Update only the items state with the new item, checking for duplicates
-          // The useEffect will handle updating filteredItems
-          setItems(prevItems => {
-            // Check if this item already exists in the array
-            const itemExists = prevItems.some(item => item.id === newItem.id);
-            if (itemExists) {
-              console.log(`Item with ID ${newItem.id} already exists, skipping`);
-              return prevItems; // Return unchanged array
-            }
-            return [...prevItems, newItem]; // Add the new item
-          });
+          // Check if this item already exists in our new items array
+          const itemExists = newItems.some(item => item.id === newItem.id);
+          if (!itemExists) {
+            newItems.push(newItem);
+            foundItems++;
+          } else {
+            console.log(`Item with ID ${newItem.id} already exists, skipping`);
+          }
 
-          foundItems++;
           consecutiveErrors = 0; // Reset consecutive errors counter
 
         } catch (itemError) {
@@ -202,14 +212,20 @@ const ArtisanItemGallery = ({ isOwner }) => {
         console.warn(
           "No items were found. This could indicate an issue with token retrieval."
         );
+      } else {
+        // Set all items at once instead of one by one
+        setItems(newItems);
       }
 
     } catch (error) {
       console.error("Error fetching items:", error);
       setError("Failed to load artisanal items. Please try again later.");
     } finally {
-      setIsLoading(false);
+      // Set loading to false and progress to 100% only after all processing is done
       setLoadingProgress(100);
+      setTimeout(() => {
+        setIsLoading(false);
+      }, 500); // Small delay to ensure progress bar animation completes
     }
   };
 
@@ -223,199 +239,207 @@ const ArtisanItemGallery = ({ isOwner }) => {
     setSelectedCategory(e.target.value);
   };
 
+  // Show full-screen loading only when we have no items yet
   if (isLoading && items.length === 0) {
     return (
-      <div className="loading-container" style={{ textAlign: 'center', padding: '2rem' }}>
-        <div className="loading">Loading artisanal items...</div>
-        <div className="progress-bar-container" style={{
-          width: '100%',
-          height: '8px',
-          backgroundColor: '#e9ecef',
-          borderRadius: '4px',
-          margin: '1rem auto',
-          maxWidth: '400px'
-        }}>
-          <div className="progress-bar" style={{
-            width: `${loadingProgress}%`,
-            height: '100%',
-            backgroundColor: '#6c5ce7',
-            borderRadius: '4px',
-            transition: 'width 0.3s ease-in-out'
-          }}></div>
+      <div className="gallery-container">
+        <div className="gallery-header">
+          <h2 className="section-title">Browse Artisanal Products</h2>
         </div>
-        <div className="loading-text" style={{ color: '#666' }}>
-          {loadingProgress < 100 ? 'Searching for artisanal items...' : 'Almost done...'}
+
+        <div className="products-container">
+          <div className="loading-container">
+            <div className="itemloading">
+              <Loader size={24} className="loading-spinner" />
+              <span>Loading artisanal items...</span>
+            </div>
+            <div className="progress-container">
+              <div className="progress-bar">
+                <div
+                  className="progress-fill"
+                  style={{ width: `${loadingProgress}%` }}
+                ></div>
+              </div>
+              <div className="progress-text">
+                {loadingProgress < 100 ? 'Searching for artisanal items...' : 'Almost done...'}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="profile-container">
-      <h2 className="form-title">Browse Artisanal Products</h2>
-
-      <div className="search-filter-bar">
-        <input
-          type="text"
-          placeholder="Search by name, description, or artisan..."
-          className="search-input"
-          value={searchTerm}
-          onChange={handleSearchChange}
-        />
-
-        <select
-          className="category-select"
-          value={selectedCategory}
-          onChange={handleCategoryChange}
-        >
-          {categories.map((category) => (
-            <option key={category.id} value={category.id}>
-              {category.name}
-            </option>
-          ))}
-        </select>
+    <div className="gallery-container">
+      <div className="gallery-header">
+        <h2 className="section-title">Browse Artisanal Products</h2>
       </div>
 
-      {error && <div className="error-message">{error}</div>}
+      <div className="products-container">
+        <div className="search-filter-container">
+          <div className="search-bar">
+            <Search size={18} className="search-icon" />
+            <input
+              type="text"
+              placeholder="Search by name, description, or artisan..."
+              className="search-input"
+              value={searchTerm}
+              onChange={handleSearchChange}
+            />
+          </div>
 
-      {isLoading && items.length > 0 && (
-        <div className="loading-indicator" style={{
-          textAlign: 'center',
-          padding: '0.5rem',
-          margin: '0.5rem 0',
-          backgroundColor: '#e6f7ff',
-          borderRadius: '4px',
-          color: '#1890ff'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <div className="spinner" style={{
-              width: '16px',
-              height: '16px',
-              border: '2px solid #1890ff',
-              borderTopColor: 'transparent',
-              borderRadius: '50%',
-              animation: 'spin 1s linear infinite',
-              marginRight: '8px'
-            }}></div>
-            <style>{`
-              @keyframes spin {
-                to { transform: rotate(360deg); }
-              }
-            `}</style>
-            Loading more items...
+          <div className="filter-bar">
+            <Filter size={18} className="filter-icon" />
+            <select
+              className="category-select"
+              value={selectedCategory}
+              onChange={handleCategoryChange}
+            >
+              {categories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
-      )}
 
-      {filteredItems.length === 0 ? (
-        <div
-          className="no-items-message"
-          style={{
-            textAlign: "center",
-            padding: "3rem",
-            background: "var(--white)",
-            borderRadius: "var(--border-radius)",
-            boxShadow: "var(--box-shadow)",
-          }}
-        >
-          {searchTerm || selectedCategory !== "all" ? (
-            <>
-              <h3 style={{ marginBottom: "1rem" }}>
-                No items match your search criteria
-              </h3>
-              <p>
-                Try adjusting your search terms or selecting a different
-                category.
-              </p>
-            </>
-          ) : (
-            <>
-              <h3 style={{ marginBottom: "1rem" }}>No artisanal items found</h3>
-              <p>
-                Be the first to mint an artisanal item and showcase your craft!
-              </p>
-              <button
-                className="cta-button"
-                style={{ marginTop: "1.5rem" }}
-                onClick={() => (window.location.href = "#/mint")}
-              >
-                Mint Your First Item
-              </button>
-            </>
-          )}
-        </div>
-      ) : (
-        <div className="item-grid">
-          {filteredItems.map((item) => (
-            <div key={item.id} className="item-card">
-              <div
-                className="item-image-container"
-                style={{ position: "relative" }}
-              >
-                <p
-                  className="item-date"
-                  style={{
-                    position: "absolute",
-                    bottom: "10px",
-                    right: "10px",
-                    margin: 0,
-                    padding: "5px 10px",
-                    borderRadius: "4px",
-                    zIndex: 1,
+        {error && (
+          <div className="message error-message">
+            <div className="message-content">
+              <CheckCircle size={20} />
+              <span>{error}</span>
+            </div>
+          </div>
+        )}
+
+        {/* Only show this loading indicator when we have some items but are still loading more */}
+        {isLoading && items.length > 0 && (
+          <div className="loading-indicator">
+            <Loader size={18} className="loading-spinner" />
+            <span>Finalizing item details...</span>
+          </div>
+        )}
+
+        {filteredItems.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-state-icon">
+              {searchTerm || selectedCategory !== "all" ? (
+                <Search size={48} />
+              ) : (
+                <Package size={48} />
+              )}
+            </div>
+
+            {searchTerm || selectedCategory !== "all" ? (
+              <div className="empty-state-content">
+                <h3>No items match your search criteria</h3>
+                <p>
+                  Try adjusting your search terms or selecting a different
+                  category.
+                </p>
+                <button
+                  className="action-button secondary"
+                  onClick={() => {
+                    setSearchTerm('');
+                    setSelectedCategory('all');
                   }}
                 >
-                  {item.creationDate}
-                </p>
-                <img
-                  src={item.image}
-                  alt={item.name}
-                  className="item-image"
-                  onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.src = `https://picsum.photos/seed/${item.id}/400/300`;
-                  }}
-                />
+                  <Filter size={18} />
+                  <span>Clear Filters</span>
+                </button>
               </div>
-              <div className="item-details">
-                <div className="item-header">
-                  <h3 className="item-title">{item.name}</h3>
-                </div>
-                <p className="item-description">
-                  Description: {item.description}
+            ) : (
+              <div className="empty-state-content">
+                <h3>No artisanal items found</h3>
+                <p>
+                  Be the first to mint an artisanal item and showcase your craft!
                 </p>
-                <p className="item-description">Materials: {item.materials}</p>
-                <div className="item-meta">
-                  <h6
-                    className="item-artisan"
-                    onClick={() => copyToClipboard(item.artisan, item.id)}
-                    style={{
-                      cursor: 'pointer',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      backgroundColor: copiedItemId === item.id ? '#e6f7ff' : 'e9ecef',
-                      padding: '4px 8px',
-                      borderRadius: '4px',
-                      transition: 'background-color 0.3s'
+                <button
+                  className="action-button primary"
+                  onClick={() => (window.location.href = "#/mint")}
+                >
+                  <Package size={18} />
+                  <span>Mint Your First Item</span>
+                </button>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="item-grid">
+            {filteredItems.map((item) => (
+              <div key={item.id} className="item-card">
+                <div className="item-image-container">
+                  <div className="item-date">
+                    <Calendar size={14} />
+                    <span>
+                    {item.creationDate}
+                    </span>
+                  </div>
+                  <img
+                    src={item.image}
+                    alt={item.name}
+                    className="item-image"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = `https://picsum.photos/seed/${item.id}/400/300`;
                     }}
+                  />
+                  <div className="item-category-badge">
+                    {item.category}
+                  </div>
+                </div>
+
+                <div className="item-details">
+                  <h3 className="item-title">{item.name}</h3>
+
+                  <div className="item-property">
+                    <div className="property-icon">
+                      <Package size={16} />
+                    </div>
+                    <div className="property-content">
+                      <span className="property-label">Description</span>
+                      <p className="property-value">{item.description}</p>
+                    </div>
+                  </div>
+
+                  <div className="item-property">
+                    <div className="property-icon">
+                      <Layers size={16} />
+                    </div>
+                    <div className="property-content">
+                      <span className="property-label">Materials</span>
+                      <p className="property-value">{item.materials}</p>
+                    </div>
+                  </div>
+
+                  <div
+                    className="item-owner"
+                    onClick={() => copyToClipboard(item.artisan, item.id)}
                     title="Click to copy full address"
                   >
-                    <span className="item-artisan-title">Owner: </span> {formatArtisanAddress(item.artisan)}
-                    {copiedItemId === item.id && (
-                      <span style={{
-                        marginLeft: '8px',
-                        color: '#1890ff',
-                        fontSize: '0.8em'
-                      }}>
-                        Copied!
-                      </span>
-                    )}
-                  </h6>
+                    <div className="owner-icon">
+                      <User size={16} />
+                    </div>
+                    <div className="owner-details">
+                      <span className="owner-label">Owner</span>
+                      <div className="owner-address">
+                        <span>{formatArtisanAddress(item.artisan)}</span>
+                        {copiedItemId === item.id ? (
+                          <CheckCircle size={14} className="copied-icon" />
+                        ) : (
+                          <Copy size={14} className="copy-icon" />
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

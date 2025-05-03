@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { AppContext } from '../context/AppContext';
 import { switchToSepoliaNetwork } from '../utils/contractUtils';
+import { Wallet, LogOut, AlertTriangle, CheckCircle } from 'lucide-react';
 
 const NewWalletConnection = () => {
   const { account, handleAccountChange } = useContext(AppContext);
@@ -12,14 +13,14 @@ const NewWalletConnection = () => {
     if (window.ethereum) {
       // Listen for account changes
       window.ethereum.on('accountsChanged', handleAccountsChanged);
-      
+
       // Listen for chain changes
       window.ethereum.on('chainChanged', handleChainChanged);
-      
+
       // Check if already connected
       checkConnection();
     }
-    
+
     return () => {
       // Clean up listeners
       if (window.ethereum) {
@@ -34,17 +35,17 @@ const NewWalletConnection = () => {
     try {
       // Get accounts
       const accounts = await window.ethereum.request({ method: 'eth_accounts' });
-      
+
       // Get network
       const chainId = await window.ethereum.request({ method: 'eth_chainId' });
-      
+
       // Check if connected to Sepolia (chainId: 0xaa36a7)
       const isSepolia = chainId === '0xaa36a7';
       setIsCorrectNetwork(isSepolia);
-      
+
       // Set network name
       setNetwork(getNetworkName(chainId));
-      
+
       // Handle accounts
       handleAccountsChanged(accounts);
     } catch (error) {
@@ -67,10 +68,10 @@ const NewWalletConnection = () => {
     // Check if connected to Sepolia (chainId: 0xaa36a7)
     const isSepolia = chainId === '0xaa36a7';
     setIsCorrectNetwork(isSepolia);
-    
+
     // Set network name
     setNetwork(getNetworkName(chainId));
-    
+
     // Reload the page to refresh the connection
     window.location.reload();
   };
@@ -95,17 +96,17 @@ const NewWalletConnection = () => {
       try {
         // Request account access
         const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-        
+
         // Get network
         const chainId = await window.ethereum.request({ method: 'eth_chainId' });
-        
+
         // Check if connected to Sepolia (chainId: 0xaa36a7)
         const isSepolia = chainId === '0xaa36a7';
         setIsCorrectNetwork(isSepolia);
-        
+
         // Set network name
         setNetwork(getNetworkName(chainId));
-        
+
         // Handle accounts
         handleAccountsChanged(accounts);
       } catch (error) {
@@ -136,32 +137,52 @@ const NewWalletConnection = () => {
   };
 
   return (
-    <div className="wallet-info">
+    <div className="wallet-connection">
       {!account ? (
-        <button className="connect-button" onClick={connectWallet}>
-          Connect Wallet
+        <button className="wallet-button connect" onClick={connectWallet}>
+          <Wallet size={18} />
+          <span>Connect Wallet</span>
         </button>
       ) : (
-        <>
-          <div className="account-display">
-            <span>{formatAddress(account)}</span>
-            <span className="network-badge" style={{ 
-              backgroundColor: isCorrectNetwork ? 'var(--success)' : 'var(--warning)'
-            }}>
-              {network}
-            </span>
+        <div className="wallet-connected">
+          <div className="wallet-account">
+            <div className="wallet-address">
+              <Wallet size={16} />
+              <span>{formatAddress(account)}</span>
+            </div>
+
+            <div className={`network-badge ${isCorrectNetwork ? 'success' : 'warning'}`}>
+              {isCorrectNetwork ? (
+                <CheckCircle size={14} />
+              ) : (
+                <AlertTriangle size={14} />
+              )}
+              <span>{network}</span>
+            </div>
           </div>
-          
-          {!isCorrectNetwork && (
-            <button className="connect-button" onClick={handleSwitchNetwork}>
-              Switch to Sepolia
+
+          <div className="wallet-actions">
+            {!isCorrectNetwork && (
+              <button
+                className="wallet-button switch"
+                onClick={handleSwitchNetwork}
+                title="Switch to Sepolia Network"
+              >
+                <AlertTriangle size={16} />
+                <span className="button-text">Switch Network</span>
+              </button>
+            )}
+
+            <button
+              className="wallet-button disconnect"
+              onClick={disconnectWallet}
+              title="Disconnect Wallet"
+            >
+              <LogOut size={16} />
+              <span className="button-text">Disconnect</span>
             </button>
-          )}
-          
-          <button className="connect-button" onClick={disconnectWallet}>
-            Disconnect
-          </button>
-        </>
+          </div>
+        </div>
       )}
     </div>
   );

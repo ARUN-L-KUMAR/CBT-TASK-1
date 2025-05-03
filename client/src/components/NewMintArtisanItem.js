@@ -2,6 +2,18 @@ import React, { useState, useContext } from 'react';
 import { mintArtisanItem } from '../utils/contractUtils';
 import { uploadFileToIPFS, uploadMetadataToIPFS, createItemMetadata } from '../utils/ipfsUtils';
 import { AppContext } from '../context/AppContext';
+import {
+  Package,
+  FileText,
+  Layers,
+  User,
+  Tag,
+  Upload,
+  Send,
+  CheckCircle,
+  XCircle,
+  Image
+} from 'lucide-react';
 
 const categories = [
   { id: 'pottery', name: 'Pottery' },
@@ -106,129 +118,220 @@ const NewMintArtisanItem = ({ setActiveTab }) => {
 
   if (!isArtisan) {
     return (
-      <div className="form-container">
-        <h2 className="form-title">Become an Artisan</h2>
-        <p className="not-artisan-message">
-          You need to be a registered artisan to mint items.
-          Please contact the platform owner to register as an artisan.
-        </p>
-        <button
-          className="submit-button"
-          onClick={() => setActiveTab('register')}
-          style={{ marginTop: '1rem' }}
-        >
-          Register as Artisan
-        </button>
+      <div className="mint-container">
+        <div className="mint-header">
+          <h2 className="section-title">Become an Artisan</h2>
+        </div>
+
+        <div className="empty-state">
+          <div className="empty-state-icon">
+            <User size={48} />
+          </div>
+          <div className="empty-state-content">
+            <h3>Registration Required</h3>
+            <p>
+              You need to be a registered artisan to mint items.
+              Please contact the platform owner to register as an artisan.
+            </p>
+            <button
+              className="action-button primary"
+              onClick={() => setActiveTab('register')}
+            >
+              <User size={18} />
+              <span>Register as Artisan</span>
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="form-container">
-      <h2 className="form-title">Mint New Artisanal Item</h2>
+    <div className="mint-container">
+      <div className="mint-header">
+        <h2 className="section-title">Mint New Artisanal Item</h2>
+      </div>
 
-      {message && <div className="message success-message">{message}</div>}
-      {error && <div className="message error-message">{error}</div>}
-
-      <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label htmlFor="name">Item Name</label>
-          <input
-            type="text"
-            id="name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Enter the name of your artisanal item"
-            required
-          />
+      {message && (
+        <div className="message success-message">
+          <div className="message-content">
+            <CheckCircle size={20} />
+            <span>{message}</span>
+          </div>
+          <button className="message-close" onClick={() => setMessage('')}>
+            <XCircle size={18} />
+          </button>
         </div>
+      )}
 
-        <div className="form-group">
-          <label htmlFor="description">Description</label>
-          <textarea
-            id="description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Describe your artisanal item in detail"
-            required
-          />
+      {error && (
+        <div className="message error-message">
+          <div className="message-content">
+            <XCircle size={20} />
+            <span>{error}</span>
+          </div>
+          <button className="message-close" onClick={() => setError('')}>
+            <XCircle size={18} />
+          </button>
         </div>
+      )}
 
-        <div className="form-group">
-          <label htmlFor="materials">Materials Used</label>
-          <input
-            type="text"
-            id="materials"
-            value={materials}
-            onChange={(e) => setMaterials(e.target.value)}
-            placeholder="e.g., clay, cotton, silver"
-            required
-          />
-        </div>
+      <div className="mint-card">
+        <div className="mint-card-body">
+          <form onSubmit={handleSubmit} className="mint-form">
+            <div className="form-row">
+              <div className="form-column">
+                <div className="form-group">
+                  <label htmlFor="name">
+                    <Package size={16} />
+                    <span>Item Name</span>
+                  </label>
+                  <input
+                    type="text"
+                    id="name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Enter the name of your artisanal item"
+                    required
+                  />
+                </div>
 
-        <div className="form-group">
-          <label htmlFor="artisanName">Artisan Name</label>
-          <input
-            type="text"
-            id="artisanName"
-            value={artisanName}
-            onChange={(e) => setArtisanName(e.target.value)}
-            placeholder="Your name or artisan brand"
-            required
-          />
-        </div>
+                <div className="form-group">
+                  <label htmlFor="description">
+                    <FileText size={16} />
+                    <span>Description</span>
+                  </label>
+                  <textarea
+                    id="description"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Describe your artisanal item in detail"
+                    required
+                    rows={4}
+                  />
+                </div>
 
-        <div className="form-group">
-          <label htmlFor="category">Category</label>
-          <select
-            id="category"
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            required
-          >
-            {categories.map(cat => (
-              <option key={cat.id} value={cat.id}>
-                {cat.name}
-              </option>
-            ))}
-          </select>
-        </div>
+                <div className="form-group">
+                  <label htmlFor="materials">
+                    <Layers size={16} />
+                    <span>Materials Used</span>
+                  </label>
+                  <input
+                    type="text"
+                    id="materials"
+                    value={materials}
+                    onChange={(e) => setMaterials(e.target.value)}
+                    placeholder="e.g., clay, cotton, silver"
+                    required
+                  />
+                </div>
 
-        <div className="form-group">
-          <label htmlFor="image">Item Image</label>
-          <input
-            type="file"
-            id="image"
-            accept="image/*"
-            onChange={handleFileChange}
-            required
-          />
-          <small>Upload a clear image of your artisanal item</small>
+                <div className="form-group">
+                  <label htmlFor="artisanName">
+                    <User size={16} />
+                    <span>Artisan Name</span>
+                  </label>
+                  <input
+                    type="text"
+                    id="artisanName"
+                    value={artisanName}
+                    onChange={(e) => setArtisanName(e.target.value)}
+                    placeholder="Your name or artisan brand"
+                    required
+                  />
+                </div>
 
-          {previewUrl && (
-            <div className="image-preview">
-              <img
-                src={previewUrl}
-                alt="Preview"
-                style={{
-                  maxWidth: '100%',
-                  maxHeight: '200px',
-                  marginTop: '10px',
-                  borderRadius: 'var(--border-radius)'
-                }}
-              />
+                <div className="form-group">
+                  <label htmlFor="category">
+                    <Tag size={16} />
+                    <span>Category</span>
+                  </label>
+                  <select
+                    id="category"
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    required
+                  >
+                    {categories.map(cat => (
+                      <option key={cat.id} value={cat.id}>
+                        {cat.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="form-column">
+                <div className="form-group file-upload-group">
+                  <label htmlFor="image">
+                    <Image size={16} />
+                    <span>Item Image</span>
+                  </label>
+
+                  <div className="file-upload-container">
+                    {!previewUrl ? (
+                      <>
+                        <div className="file-upload-placeholder">
+                          <Upload size={32} />
+                          <p>Drag & drop an image or click to browse</p>
+                        </div>
+                        <input
+                          type="file"
+                          id="image"
+                          accept="image/*"
+                          onChange={handleFileChange}
+                          required
+                          className="file-input"
+                        />
+                      </>
+                    ) : (
+                      <div className="image-preview-container">
+                        <img
+                          src={previewUrl}
+                          alt="Preview"
+                          className="image-preview"
+                        />
+                        <button
+                          type="button"
+                          className="remove-image-button"
+                          onClick={() => {
+                            setFile(null);
+                            setPreviewUrl('');
+                            document.getElementById('image').value = '';
+                          }}
+                        >
+                          <XCircle size={18} />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  <small className="file-upload-help">Upload a clear image of your artisanal item</small>
+                </div>
+              </div>
             </div>
-          )}
-        </div>
 
-        <button
-          type="submit"
-          className="submit-button"
-          disabled={isLoading}
-        >
-          {isLoading ? 'Minting...' : 'Mint Item'}
-        </button>
-      </form>
+            <div className="form-actions">
+              <button
+                type="submit"
+                className="action-button primary submit-button"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <span className="loading-spinner-small"></span>
+                    <span>Minting...</span>
+                  </>
+                ) : (
+                  <>
+                    <Send size={18} />
+                    <span>Mint Item</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
   );
 };
