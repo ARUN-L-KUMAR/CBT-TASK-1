@@ -20,6 +20,7 @@ function App() {
   } = useContext(AppContext);
 
   const [activeTab, setActiveTab] = useState('home');
+  const [showRegistrationForm, setShowRegistrationForm] = useState(false);
 
   const handleSwitchNetwork = async () => {
     try {
@@ -80,7 +81,11 @@ function App() {
       case 'mint':
         return <NewMintArtisanItem setActiveTab={setActiveTab} />;
       case 'register':
-        return <NewArtisanRegistration />;
+        return <NewArtisanRegistration
+          setActiveTab={setActiveTab}
+          showRegistrationForm={showRegistrationForm}
+          setShowRegistrationForm={setShowRegistrationForm}
+        />;
       default:
         return <HomePage setActiveTab={setActiveTab} />;
     }
@@ -116,14 +121,12 @@ function App() {
             Mint New Item
           </button>
         )}
-        {(isOwner || !isArtisan) && (
-          <button
-            className={`nav-tab ${activeTab === 'register' ? 'active' : ''}`}
-            onClick={() => setActiveTab('register')}
-          >
-            {isArtisan ? 'Artisan Profile' : 'Register Artisan'}
-          </button>
-        )}
+        <button
+          className={`nav-tab ${activeTab === 'register' ? 'active' : ''}`}
+          onClick={() => setActiveTab('register')}
+        >
+          {isArtisan ? 'Artisan Profile' : 'Register Artisan'}
+        </button>
       </nav>
 
       <main className="App-main">

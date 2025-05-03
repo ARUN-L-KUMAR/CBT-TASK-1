@@ -1,5 +1,5 @@
 /**
- * Chennai Artisanal Goods Provenance DApp
+ * Decentralized Event Ticketing DApp
  * Truffle configuration file
  */
 
@@ -30,8 +30,8 @@ module.exports = {
       timeoutBlocks: 200,
       skipDryRun: true,
       confirmations: 2,
-      gasPrice: 5000000000, // 5 gwei (reduced from 20 gwei)
-      gas: 3000000, // Reduced gas limit
+      gasPrice: 5000000000, // 5 gwei
+      gas: 3000000,
     }
   },
 

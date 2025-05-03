@@ -5,7 +5,7 @@ import { getContractInstance, isArtisanRegistered, setContractAddress } from '..
 export const AppContext = createContext();
 
 // Create provider
-export const AppProvider = ({ children, contractAddress }) => {
+export const AppProvider = ({ children }) => {
   const [account, setAccount] = useState('');
   const [isOwner, setIsOwner] = useState(false);
   const [isArtisan, setIsArtisan] = useState(false);
@@ -13,12 +13,12 @@ export const AppProvider = ({ children, contractAddress }) => {
   const [error, setError] = useState('');
   const [isWrongNetwork, setIsWrongNetwork] = useState(false);
 
+  // Use contract address from environment variable
   useEffect(() => {
-    // Set contract address
-    if (contractAddress) {
-      setContractAddress(contractAddress);
-    }
-  }, [contractAddress]);
+    const contractAddress = process.env.REACT_APP_CONTRACT_ADDRESS || '0x5D2d4849A8B37F86228607446F0152176bB3Ae5D';
+    console.log('Setting contract address from AppContext:', contractAddress);
+    setContractAddress(contractAddress);
+  }, []);
 
   useEffect(() => {
     if (account) {
@@ -70,7 +70,7 @@ export const AppProvider = ({ children, contractAddress }) => {
       }
     } catch (error) {
       console.error('Error checking user role:', error);
-      
+
       // Check if it's a network error
       if (error.message && error.message.includes('Sepolia testnet')) {
         setIsWrongNetwork(true);

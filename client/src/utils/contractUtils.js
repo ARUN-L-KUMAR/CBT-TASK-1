@@ -90,6 +90,14 @@ export const getContractInstance = async (needSigner = false) => {
       console.log('Signer created successfully');
       const signerAddress = await signer.getAddress();
       console.log('Signer address:', signerAddress);
+
+      // Check if the signer has enough balance
+      const balance = await provider.getBalance(signerAddress);
+      console.log('Signer balance:', ethers.formatEther(balance), 'ETH');
+
+      if (balance < ethers.parseEther('0.001')) {
+        console.warn('Warning: Low balance. You may not have enough ETH to complete transactions.');
+      }
     }
 
     // Verify ABI exists
@@ -118,33 +126,106 @@ export const getContractInstance = async (needSigner = false) => {
 // Function to register an artisan
 export const registerArtisan = async (artisanAddress, details) => {
   try {
-    const { contract } = await getContractInstance(true);
+    const { contract, signer, provider } = await getContractInstance(true);
 
     // Convert details object to JSON string if it's an object
     const detailsString = typeof details === 'object' ? JSON.stringify(details) : details;
 
     console.log('Registering artisan with address:', artisanAddress);
     console.log('Artisan details (as string):', detailsString);
+    console.log('Transaction sender:', await signer.getAddress());
 
-    const tx = await contract.registerArtisan(artisanAddress, detailsString);
-    await tx.wait();
+    // Explicitly connect the contract to the signer to ensure the transaction is sent from the correct account
+    const connectedContract = contract.connect(signer);
+
+    // Get current gas price and increase it by 20%
+    const feeData = await provider.getFeeData();
+    const gasPrice = feeData.gasPrice;
+    const increasedGasPrice = gasPrice * 120n / 100n; // Increase by 20%
+
+    console.log('Current gas price:', gasPrice.toString());
+    console.log('Increased gas price:', increasedGasPrice.toString());
+
+    // Add gas limit and increased gas price to avoid replacement underpriced errors
+    const tx = await connectedContract.registerArtisan(artisanAddress, detailsString, {
+      gasLimit: 500000, // Adjust this value as needed
+      gasPrice: increasedGasPrice // Use higher gas price
+    });
+
+    console.log('Transaction sent:', tx.hash);
+
+    // Wait for the transaction to be mined
+    const receipt = await tx.wait();
+    console.log('Transaction confirmed in block:', receipt.blockNumber);
+
     return tx.hash;
   } catch (error) {
     console.error('Error registering artisan:', error);
-    throw error;
+    // Provide more detailed error information
+    if (error.code === 'ACTION_REJECTED') {
+      throw new Error('Transaction was rejected by the user');
+    } else if (error.code === 'REPLACEMENT_UNDERPRICED') {
+      // If we get a replacement underpriced error, try again with an even higher gas price
+      console.log('Replacement transaction underpriced. Please try again with a higher gas price.');
+      throw new Error('Transaction failed: Gas price too low. Please try again or wait for pending transactions to complete.');
+    } else if (error.message && error.message.includes('account')) {
+      throw new Error('Account error: ' + error.message);
+    } else if (error.message && error.message.includes('replacement fee too low')) {
+      throw new Error('Transaction failed: Gas price too low. Please try again or wait for pending transactions to complete.');
+    } else {
+      throw error;
+    }
   }
 };
 
 // Function to mint a new artisanal item
 export const mintArtisanItem = async (tokenURI, description, materials, ipfsImageHash) => {
   try {
-    const { contract } = await getContractInstance(true);
-    const tx = await contract.mintArtisanItem(tokenURI, description, materials, ipfsImageHash);
-    await tx.wait();
+    const { contract, signer, provider } = await getContractInstance(true);
+
+    console.log('Minting item with URI:', tokenURI);
+    console.log('Transaction sender:', await signer.getAddress());
+
+    // Explicitly connect the contract to the signer
+    const connectedContract = contract.connect(signer);
+
+    // Get current gas price and increase it by 20%
+    const feeData = await provider.getFeeData();
+    const gasPrice = feeData.gasPrice;
+    const increasedGasPrice = gasPrice * 120n / 100n; // Increase by 20%
+
+    console.log('Current gas price:', gasPrice.toString());
+    console.log('Increased gas price:', increasedGasPrice.toString());
+
+    // Add gas limit and increased gas price to avoid replacement underpriced errors
+    const tx = await connectedContract.mintArtisanItem(tokenURI, description, materials, ipfsImageHash, {
+      gasLimit: 500000, // Adjust this value as needed
+      gasPrice: increasedGasPrice // Use higher gas price
+    });
+
+    console.log('Transaction sent:', tx.hash);
+
+    // Wait for the transaction to be mined
+    const receipt = await tx.wait();
+    console.log('Transaction confirmed in block:', receipt.blockNumber);
+
     return tx.hash;
   } catch (error) {
     console.error('Error minting item:', error);
-    throw error;
+    // Provide more detailed error information
+    if (error.code === 'ACTION_REJECTED') {
+      throw new Error('Transaction was rejected by the user');
+    } else if (error.code === 'REPLACEMENT_UNDERPRICED') {
+      // If we get a replacement underpriced error, try again with an even higher gas price
+      console.log('Replacement transaction underpriced. Please try again with a higher gas price.');
+      throw new Error('Transaction failed: Gas price too low. Please try again or wait for pending transactions to complete.');
+    } else if (error.message && error.message.includes('account')) {
+      throw new Error('Account error: ' + error.message);
+    } else if (error.message && error.message.includes('replacement fee too low')) {
+      throw new Error('Transaction failed: Gas price too low. Please try again or wait for pending transactions to complete.');
+    } else {
+      throw error;
+    }
   }
 };
 
@@ -173,13 +254,51 @@ export const getItemDetails = async (tokenId) => {
 // Function to verify an item
 export const verifyItem = async (tokenId, verified) => {
   try {
-    const { contract } = await getContractInstance(true);
-    const tx = await contract.verifyItem(tokenId, verified);
-    await tx.wait();
+    const { contract, signer, provider } = await getContractInstance(true);
+
+    console.log('Verifying item with token ID:', tokenId, 'Status:', verified);
+    console.log('Transaction sender:', await signer.getAddress());
+
+    // Explicitly connect the contract to the signer
+    const connectedContract = contract.connect(signer);
+
+    // Get current gas price and increase it by 20%
+    const feeData = await provider.getFeeData();
+    const gasPrice = feeData.gasPrice;
+    const increasedGasPrice = gasPrice * 120n / 100n; // Increase by 20%
+
+    console.log('Current gas price:', gasPrice.toString());
+    console.log('Increased gas price:', increasedGasPrice.toString());
+
+    // Add gas limit and increased gas price to avoid replacement underpriced errors
+    const tx = await connectedContract.verifyItem(tokenId, verified, {
+      gasLimit: 300000, // Adjust this value as needed
+      gasPrice: increasedGasPrice // Use higher gas price
+    });
+
+    console.log('Transaction sent:', tx.hash);
+
+    // Wait for the transaction to be mined
+    const receipt = await tx.wait();
+    console.log('Transaction confirmed in block:', receipt.blockNumber);
+
     return tx.hash;
   } catch (error) {
     console.error('Error verifying item:', error);
-    throw error;
+    // Provide more detailed error information
+    if (error.code === 'ACTION_REJECTED') {
+      throw new Error('Transaction was rejected by the user');
+    } else if (error.code === 'REPLACEMENT_UNDERPRICED') {
+      // If we get a replacement underpriced error, try again with an even higher gas price
+      console.log('Replacement transaction underpriced. Please try again with a higher gas price.');
+      throw new Error('Transaction failed: Gas price too low. Please try again or wait for pending transactions to complete.');
+    } else if (error.message && error.message.includes('account')) {
+      throw new Error('Account error: ' + error.message);
+    } else if (error.message && error.message.includes('replacement fee too low')) {
+      throw new Error('Transaction failed: Gas price too low. Please try again or wait for pending transactions to complete.');
+    } else {
+      throw error;
+    }
   }
 };
 
@@ -289,6 +408,71 @@ export const getTokenURI = async (tokenId) => {
     return uri;
   } catch (error) {
     console.error('Error getting token URI:', error);
+    throw error;
+  }
+};
+
+// Function to get all registered artisans from events
+export const getAllArtisans = async () => {
+  try {
+    const { contract, provider } = await getContractInstance();
+
+    console.log('Fetching all registered artisans...');
+
+    // Get the current block number
+    const currentBlock = await provider.getBlockNumber();
+
+    // Get all ArtisanRegistered events from the contract
+    const filter = contract.filters.ArtisanRegistered();
+    const events = await contract.queryFilter(filter, 0, currentBlock);
+
+    console.log(`Found ${events.length} artisan registration events`);
+
+    // Process the events to get unique artisans
+    const artisans = [];
+    const artisanAddresses = new Set();
+
+    for (const event of events) {
+      const artisanAddress = event.args[0];
+
+      // Skip if we've already processed this artisan
+      if (artisanAddresses.has(artisanAddress)) {
+        continue;
+      }
+
+      artisanAddresses.add(artisanAddress);
+
+      try {
+        // Get artisan details
+        const details = await getArtisanDetails(artisanAddress);
+
+        artisans.push({
+          address: artisanAddress,
+          name: details.name || 'Unknown',
+          location: details.location || 'Unknown',
+          specialty: details.specialty || 'Unknown',
+          bio: details.bio || '',
+          registrationDate: details.registrationDate || Date.now()
+        });
+      } catch (error) {
+        console.error(`Error fetching details for artisan ${artisanAddress}:`, error);
+        // Add with minimal information if details can't be fetched
+        artisans.push({
+          address: artisanAddress,
+          name: 'Unknown',
+          location: 'Unknown',
+          specialty: 'Unknown',
+          bio: '',
+          registrationDate: Date.now()
+        });
+      }
+    }
+
+    console.log(`Processed ${artisans.length} unique artisans`);
+    return artisans;
+
+  } catch (error) {
+    console.error('Error getting all artisans:', error);
     throw error;
   }
 };
